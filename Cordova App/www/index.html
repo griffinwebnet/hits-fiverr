@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html ng-app="app">
+
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src *; img-src * 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' *; style-src  'self' 'unsafe-inline' *">
+  <!-- Styling -->
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale = 1.0, user-scalable = no">
+  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> -->
+  <!-- Custome materalize:-->
+  <!-- <link rel="stylesheet" href="assets/materialize-custom.css"> -->
+  <link rel="stylesheet" href="assets/style.css?v=0.0.1">
+</head>
+
+<body ng-controller="appCtrl">
+
+  <!-- Initalize SoundManager -->
+  <sound-manager></sound-manager>
+
+
+  <!-- Background --
+  <img id="bg" ng-src="{{currentPlaying.logo}}">
+
+  !-- Song Cards -->
+
+  <!-- Site Content -->
+  <div ng-view class="content-container view-animate">
+
+  </div>
+
+  <!-- Music Player (Bottom)  -->
+  <div class="navbar-fixed" id="nav-bottom">
+    <nav id="music-player">
+      <title>{{ currentPlaying.trackTitle }}</title>
+      <div class="row" style="max-width: 100%">
+
+        <!-- initial app load state -->
+        <div ng-if='!currentPlaying.stationname' class="col" id="nav-metadata">
+          <!-- play icon -->
+          <span class="play-icon col control-icons"></span>
+
+          <!-- dummy album art -->
+
+          <!-- dummy data -->
+          <a class="tracktitle init">
+            <p class="overflow">Welcome to Hits Radio</p>
+            <span class="overflow">Select a station to start streaming!</span>
+          </a>
+        </div>
+
+        <!-- is streaming -->
+        <div ng-if='currentPlaying.stationname' class="col" id="nav-metadata">
+          <!-- play/pause -->
+          <span ng-show="!isPlaying" class="play-icon col control-icons" play-music></span>
+          <span ng-show="isPlaying" class="pause-icon col control-icons" stop-music></span>
+
+          <!-- station art -->
+          <a ng-if='currentPlaying.logo' class="col albumart-small" href="#!/player"
+            style="background-image: url('{{ currentPlaying.logo }}');"></a>
+
+          <!-- trck title-->
+          <a class="tracktitle" href="#!/player">
+            <p class="overflow">{{ currentPlaying.trackTitle }}</p>
+            <span class="overflow">{{ currentPlaying.trackArtist}} </span>
+          </a>
+
+        </div>
+        <div class="menu-dropdown" style=" display: none">
+          <a music-player="play" add-song="song" ng-repeat="song in songs">{{ song.stationname }}</a>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <div class="ngvars"
+    style="height: 0; display: none; visibility: hidden; position: absolute; left: -9999999; top: -9999999;">
+    <!-- <div class="ngvars"> -->
+    <input id="current-title" type="text" value="{{ currentPlaying.trackTitle }}">
+    <input id="current-ticker" type="text"
+      value="Now on Hits: {{ currentPlaying.trackTitle }} - {{ currentPlaying.trackArtist }}">
+    <input id="current-artist" type="text" value="{{ currentPlaying.trackArtist }}">
+    <input id="current-album" type="text" value="Hits {{ currentPlaying.stationname }}">
+    <input id="current-artwork" type="text" value="{{ currentPlaying.logo }}">
+    <input ng-if="!isPlaying" id="play-status" type="text" value="stopped">
+    <input ng-if="isPlaying" id="play-status" type="text" value="playing">
+    <button ng-if="!isPlaying" id="control-play" play-music>play</button>
+    <button ng-if="isPlaying" id="control-play" stop-music>stop</button>
+  </div>
+
+  <!-- Scripts -->
+  <script src="cordova.js"></script>
+  <script src="./dist/jquery.js"></script>
+  <script src="./dist/angular.js"></script>
+  <script src="./dist/angular-animate.js"></script>
+  <script src="./dist/angular-soundmanager2.min.js"></script>
+  <script src="./dist/angular-route.min.js"></script>
+  <script src="./dist/id3-minimized.js" type="text/javascript"></script>
+  <script src="./assets/app.js?v=0.0.2"></script>
+  <script type="text/javascript">
+    document.addEventListener('deviceready', function () {
+      cordova.plugins.backgroundMode.enable();
+      cordova.plugins.backgroundMode.overrideBackButton();
+
+      MusicControls.create({
+        track: "Hits Radio!",
+        artist: "Select a Station!",
+        cover: "images/logos/stations/hitsplus.png",
+        hasPrev: false,
+        hasNext: false,
+        notificationIcon: 'images/logo.png'
+      }, onSuccess, onError);
+
+
+      function onSuccess() {
+
+        function events(action) {
+          const message = JSON.parse(action).message;
+          switch (message) {
+            case 'music-controls-pause':
+              console.log("pausing");
+              document.getElementById("control-play").click();
+              MusicControls.updateIsPlaying(false);
+              MusicControls.updateDismissable(true);
+              break;
+            case 'music-controls-play':
+              console.log("playing");
+              document.getElementById("control-play").click();
+              MusicControls.updateDismissable(false);
+              break;
+          }
+        }
+        MusicControls.subscribe(events);
+        MusicControls.listen();
+        console.log(
+          'music controls created:\n' + JSON.stringify(window.MusicControls)
+        )
+      }
+
+      function onError() {
+        console.log(
+          'fail to create music controls, err: ' + JSON.stringify(e)
+        )
+      }
+
+      function metaCheck() {
+        if (document.getElementById("current-title").value == "" || document.getElementById("current-title")
+          .value == "{{ currentPlaying.trackTitle }}") {
+          // console.log("no metadata to display...");
+        } else {
+          if (document.getElementById("play-status").value == "stopped") {
+            // console.log("playback stopped... nothign to do...");
+          } else {
+            var currentTitle = document.getElementById("current-title").value;
+            var currentTicker = document.getElementById("current-ticker").value;
+            var currentArtist = document.getElementById("current-artist").value;
+            var currentAlbum = document.getElementById("current-album").value;
+            var currentArtwork = document.getElementById("current-artwork").value;
+            MusicControls.create({
+              track: currentTitle,
+              ticker: currentTicker,
+              artist: currentArtist,
+              album: currentAlbum,
+              cover: currentArtwork,
+              playIcon: 'media_play',
+              pauseIcon: 'media_pause',
+              hasPrev: false,
+              hasNext: false,
+              notificationIcon: 'images/interface/notification.ico'
+            });
+          }
+        }
+        setTimeout(metaCheck, 1000);
+      };
+      metaCheck();
+
+    }, false);
+  </script>
+  <script type="text/javascript">
+    function overflowCheck() {
+      $('.overflow').each(function (index, elem) {
+        if (elem.offsetWidth !== elem.scrollWidth) {
+          // console.log("title is overflowing");
+          $(this).addClass('marquee');
+        } else {
+          // console.log("title !is overflowing");
+          $(this).removeClass('marquee');
+        }
+      });
+      setTimeout(overflowCheck, 1000);
+    }
+
+    overflowCheck();
+  </script>
+</body>
+
+</html>

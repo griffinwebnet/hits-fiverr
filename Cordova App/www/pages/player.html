@@ -1,0 +1,49 @@
+<div id="bg" style="background-image: url({{currentPlaying.logo}}); filter: blur(20px);"></div>
+<!-- <video autoplay muted loop id="bg">
+  <source src="{{ currentPlaying.video }}" type="video/mp4" preload poster="{{ currentPlaying.logo }}">
+</video> -->
+<style>
+  .content-container{
+  max-height: 100vh;
+}
+  #nav-bottom{
+    visibility: hidden;
+  }
+</style>
+<div class="card">
+  <div class="titlebar">
+    <span><!-- Logo --></span>
+    <a class="menu" href="#!/"><i class="large material-icons">dehaze</i></a>
+  </div>
+
+  <div class="playerui">
+    <div class="col meta album">
+      <img class="albumart" ng-src="{{ currentPlaying.logo }}" />
+    </div>
+    <div class="controls">
+      <div class="col meta">
+        <div class="stationdata">
+          <h6>{{ currentPlaying.stationname }}</h6>
+          <!-- <h4>{{ currentPlaying.stationdescription }}</h4> -->
+          <p class="track overflow">{{ currentPlaying.trackTitle }}</p>
+          <p class="artist overflow">{{ currentPlaying.trackArtist }}</p>
+        </div>
+      </div>
+      <div class="player-ctrl row">
+        <i class="material-icons col" style="visibility: hidden;">favorite_border</i>
+        <i ng-show="!isPlaying" class="material-icons playpause col large-icons" play-music>play_circle_filled</i>
+        <i ng-show="isPlaying" class="material-icons playpause col large-icons" stop-music>pause_circle_filled</i>
+        <i class="material-icons col" style="visibility: hidden;"><a href="#!/contact">insert_comment</a></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var v = document.querySelector('video'),
+      sources = v.querySelectorAll('source'),
+      lastsource = sources[sources.length-1];
+  lastsource.addEventListener('error', function(ev) {
+    v.style.display = 'none';
+  }, false);
+  </script>
